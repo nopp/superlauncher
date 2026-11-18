@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  {{template "head"}}
+  <title>Entrar · Super Launcher</title>
+</head>
+<body class="admin center">
+  <form class="card login" method="post" action="/admin/login">
+    <h1>🚀 Super Launcher</h1>
+    <p class="muted">Área administrativa</p>
+    {{with .Error}}<div class="alert error">{{.}}</div>{{end}}
+    <label>Senha
+      <input type="password" name="password" autofocus required>
+    </label>
+    <button class="btn primary" type="submit">Entrar</button>
+    <a class="muted small" href="/">← Voltar ao launcher</a>
+  </form>
+</body>
+</html>

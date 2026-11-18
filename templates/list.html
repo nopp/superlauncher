@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  {{template "head"}}
+  <title>Apps · Super Launcher</title>
+</head>
+<body class="admin">
+  {{template "adminbar"}}
+  <main class="container">
+    <div class="toolbar">
+      <h1>Apps cadastrados</h1>
+      <a class="btn primary" href="/admin/apps/new">+ Novo app</a>
+    </div>
+
+    {{with .Msg}}<div class="alert success">{{.}}</div>{{end}}
+
+    {{if .Apps}}
+    <div class="card">
+      <table class="table">
+        <thead>
+          <tr><th></th><th>Nome</th><th>URL</th><th class="num">Ordem</th><th class="actions">Ações</th></tr>
+        </thead>
+        <tbody>
+          {{range .Apps}}
+          <tr>
+            <td><span class="icon sm">{{template "appicon" .}}</span></td>
+            <td><strong>{{.Name}}</strong>{{with .Description}}<div class="muted small">{{.}}</div>{{end}}</td>
+            <td><a href="{{.URL}}" target="_blank" rel="noopener" class="url">{{.URL}}</a></td>
+            <td class="num">{{.Position}}</td>
+            <td class="actions">
+              <a class="btn" href="/admin/apps/{{.ID}}/edit">Editar</a>
+              <form method="post" action="/admin/apps/{{.ID}}/delete" onsubmit="return confirm('Excluir o app &quot;{{.Name}}&quot;?')">
+                <button class="btn danger" type="submit">Excluir</button>
+              </form>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+    {{else}}
+    <div class="card empty-state">
+      <p>Nenhum app cadastrado ainda.</p>
+      <a class="btn primary" href="/admin/apps/new">Cadastrar o primeiro app</a>
+    </div>
+    {{end}}
+  </main>
+</body>
+</html>

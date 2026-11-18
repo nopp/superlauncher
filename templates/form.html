@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  {{template "head"}}
+  <title>{{if .IsNew}}Novo app{{else}}Editar {{.App.Name}}{{end}} · Super Launcher</title>
+</head>
+<body class="admin">
+  {{template "adminbar"}}
+  <main class="container narrow">
+    <div class="toolbar">
+      <h1>{{if .IsNew}}Novo app{{else}}Editar app{{end}}</h1>
+      <a class="btn" href="/admin">← Voltar</a>
+    </div>
+
+    {{with .Error}}<div class="alert error">{{.}}</div>{{end}}
+
+    <form class="card form" method="post" enctype="multipart/form-data"
+          action="{{if .IsNew}}/admin/apps{{else}}/admin/apps/{{.App.ID}}{{end}}">
+      <label>Nome *
+        <input type="text" name="name" value="{{.App.Name}}" required maxlength="80" placeholder="Ex.: SolidWorks, Workshop, Plex">
+      </label>
+
+      <label>URL *
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="app_url" name="url" value="{{.App.URL}}" required placeholder="http://192.168.0.10:8080" style="flex: 1;">
+          <button type="button" id="btn_fetch_icon" class="btn" title="Buscar ícone/favicon automaticamente do site">🔍 Buscar Ícone</button>
+        </div>
+        <span id="fetch_status" class="muted small" style="margin-top: 4px;"></span>
+      </label>
+
+      <label>Descrição <span class="muted">(aparece ao passar o mouse)</span>
+        <input type="text" name="description" value="{{.App.Description}}" maxlength="200">
+      </label>
+
+      <fieldset>
+        <legend>Ícone</legend>
+        <div class="icon-row">
+          <span class="icon lg" id="preview_icon">{{template "appicon" .App}}</span>
+          <div class="icon-fields">
+            <label>Enviar imagem <span class="muted">(png, jpg, svg, webp, ico — até 5 MB)</span>
+              <input type="file" name="icon_file" accept=".png,.jpg,.jpeg,.gif,.webp,.svg,.ico,image/*">
+            </label>
+            <label>ou URL de uma imagem
+              <input type="text" id="icon_url" name="icon_url" value="{{.IconURL}}" placeholder="https://exemplo.com/icone.png">
+            </label>
+            {{if .App.Icon}}
+            <label class="check"><input type="checkbox" name="remove_icon"> Remover ícone (usar a inicial do nome)</label>
+            {{end}}
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="row">
+        <label>Ordem <span class="muted">(menor aparece primeiro)</span>
+          <input type="number" name="position" value="{{.App.Position}}">
+        </label>
+        <label class="check"><input type="checkbox" name="new_tab" {{if .App.NewTab}}checked{{end}}> Abrir em nova aba</label>
+      </div>
+
+      <div class="form-actions">
+        <a class="btn" href="/admin">Cancelar</a>
+        <button class="btn primary" type="submit">{{if .IsNew}}Cadastrar{{else}}Salvar alterações{{end}}</button>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    const urlInput = document.getElementById('app_url');
+    const iconUrlInput = document.getElementById('icon_url');
+    const fetchBtn = document.getElementById('btn_fetch_icon');
+    const statusEl = document.getElementById('fetch_status');
+    const previewEl = document.getElementById('preview_icon');
+
+    function updatePreview(src) {
+      if (!src) return;
+      previewEl.innerHTML = '<img src="' + src + '" alt="preview">';
+    }
+
+    iconUrlInput.addEventListener('input', () => {
+      if (iconUrlInput.value.trim()) {
+        updatePreview(iconUrlInput.value.trim());
+      }
+    });
+
+    async function autoFetchIcon() {
+      const u = urlInput.value.trim();
+      if (!u) return;
+      statusEl.textContent = 'Buscando ícone/logo da página...';
+      statusEl.style.color = 'var(--muted)';
+      try {
+        const res = await fetch('/admin/fetch-icon?url=' + encodeURIComponent(u));
+        const data = await res.json();
+        if (res.ok && data.icon_url) {
+          iconUrlInput.value = data.icon_url;
+          updatePreview(data.icon_url);
+          statusEl.textContent = '✓ Ícone capturado com sucesso!';
+          statusEl.style.color = 'var(--success)';
+        } else {
+          statusEl.textContent = 'Não encontramos ícone automático. Você pode enviar um arquivo acima.';
+          statusEl.style.color = 'var(--muted)';
+        }
+      } catch (err) {
+        statusEl.textContent = 'Falha ao buscar ícone automaticamente.';
+      }
+    }
+
+    fetchBtn.addEventListener('click', autoFetchIcon);
+
+    // Se o usuário colar ou digitar uma URL e mudar de campo, e o campo de ícone estiver vazio:
+    urlInput.addEventListener('blur', () => {
+      if (urlInput.value.trim() && !iconUrlInput.value.trim()) {
+        autoFetchIcon();
+      }
+    });
+  </script>
+</body>
+</html>

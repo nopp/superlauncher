@@ -1,0 +1,20 @@
+{{define "head"}}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/style.css">
+{{end}}
+
+{{define "appicon"}}
+{{if .Icon}}<img src="{{.Icon}}" alt="" loading="lazy">{{else}}<span class="letter" style="background: {{color .Name}}">{{initial .Name}}</span>{{end}}
+{{end}}
+
+{{define "adminbar"}}
+<header class="adminbar">
+  <a class="brand" href="/admin">🚀 Super Launcher <small>admin</small></a>
+  <nav>
+    <a href="/" target="_blank">Ver launcher ↗</a>
+    <form method="post" action="/admin/logout"><button class="link">Sair</button></form>
+  </nav>
+</header>
+{{end}}

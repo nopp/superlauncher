@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  {{template "head"}}
+  <title>Super Launcher</title>
+</head>
+<body class="home">
+  <a class="admin-link" href="/admin" title="Administrar apps" aria-label="Administrar apps">
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M19.14 12.94a7.07 7.07 0 0 0 .05-.94 7.07 7.07 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54a7 7 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.4 7.4 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .61.22l2.39-.96c.5.38 1.04.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54a7 7 0 0 0 1.62-.94l2.39.96a.5.5 0 0 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"/></svg>
+  </a>
+
+  <main class="launcher">
+    <div class="clock">
+      <div id="time">--:--</div>
+      <div id="date"></div>
+    </div>
+
+    <form class="search" action="https://www.google.com/search" method="get" role="search">
+      <svg class="g-logo" viewBox="0 0 48 48" width="24" height="24" aria-hidden="true">
+        <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/>
+        <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 8 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/>
+        <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+        <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"/>
+      </svg>
+      <input type="search" name="q" placeholder="Pesquisar no Google" autocomplete="off" autofocus aria-label="Pesquisar no Google">
+      <button type="submit" aria-label="Pesquisar">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16a6.47 6.47 0 0 0 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      </button>
+    </form>
+
+    <section class="grid">
+      {{range .Apps}}
+      <a class="tile" id="app-{{.ID}}" data-id="{{.ID}}" href="{{.URL}}"{{if .NewTab}} target="_blank" rel="noopener"{{end}}{{if .Description}} data-desc="{{.Description}}" title="{{.Description}}"{{else}} data-desc=""{{end}}>
+        <span class="icon">{{template "appicon" .}}</span>
+        <span class="name">{{.Name}}</span>
+        <span class="status-badge" title="Verificando..."></span>
+      </a>
+      {{else}}
+      <p class="empty">Nenhum app cadastrado ainda. <a href="/admin/apps/new">Cadastre o primeiro →</a></p>
+      {{end}}
+    </section>
+  </main>
+
+  <script>
+    function tick() {
+      const now = new Date();
+      document.getElementById('time').textContent =
+        now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      document.getElementById('date').textContent =
+        now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+    tick(); setInterval(tick, 10000);
+
+    // Verificação de status online/offline
+    async function checkAppStatus() {
+      try {
+        const res = await fetch('/api/status');
+        if (!res.ok) return;
+        const statusMap = await res.json();
+        
+        document.querySelectorAll('.tile[data-id]').forEach(tile => {
+          const id = tile.getAttribute('data-id');
+          if (id in statusMap) {
+            const isOnline = statusMap[id];
+            const originalDesc = tile.getAttribute('data-desc') || '';
+            if (isOnline) {
+              tile.classList.remove('offline');
+              tile.setAttribute('title', originalDesc);
+              tile.removeAttribute('tabindex');
+            } else {
+              tile.classList.add('offline');
+              tile.setAttribute('title', (originalDesc ? originalDesc + ' • ' : '') + 'Offline / Inacessível no momento');
+              tile.setAttribute('tabindex', '-1');
+            }
+          }
+        });
+      } catch (e) {
+        // Ignora erros transitórios de rede
+      }
+    }
+
+    checkAppStatus();
+    // Atualiza o status a cada 30 segundos
+    setInterval(checkAppStatus, 30000);
+  </script>
+</body>
+</html>
