@@ -2,6 +2,8 @@
 
 A lightweight, elegant, and self-hosted personal dashboard and application launcher built with **Go (Golang)** and an embedded **SQLite** database (pure Go, CGO-free).
 
+![Super Launcher Screenshot](docs/screenshot.png)
+
 ---
 
 ## ✨ Features
